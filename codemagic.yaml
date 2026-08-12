@@ -4,13 +4,26 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m1
     scripts:
-      - name: Set up keystore and build
+      - name: Extract ZIP and Build
         script: |
+          echo "Extracting project..."
+          unzip -o "edulearn (5).zip"
+          
+          GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+          
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew file not found!"
+            exit 1
+          fi
+          
+          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+          cd "$PROJECT_DIR"
+          
           keytool -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
           mkdir -p app
           cp debug.keystore app/debug.keystore
+          
           chmod +x gradlew
           ./gradlew assembleDebug
     artifacts:
-      - app/build/outputs/**/*.apk
-      
+      - "**/build/outputs/**/*.apk"
