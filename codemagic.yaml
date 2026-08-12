@@ -1,0 +1,16 @@
+workflows:
+  android-build:
+    name: Android Build
+    max_build_duration: 30
+    instance_type: mac_mini_m1
+    scripts:
+      - name: Set up keystore and build
+        script: |
+          keytool -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          mkdir -p app
+          cp debug.keystore app/debug.keystore
+          chmod +x gradlew
+          ./gradlew assembleDebug
+    artifacts:
+      - app/build/outputs/**/*.apk
+      
