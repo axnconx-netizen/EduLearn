@@ -15,12 +15,19 @@ jobs:
 
     - name: Unzip project files
       run: |
-        if ls *.zip 1> /dev/null 2>&1; then
-          echo "Zip file found, extracting..."
-          unzip -o *.zip
-          if [ -f */gradlew ]; then
-            mv */* . 2>/dev/null || true
-            mv */.* . 2>/dev/null || true
+        ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
+        if [ -n "$ZIP_FILE" ]; then
+          echo "Extracting: $ZIP_FILE"
+          unzip -o "$ZIP_FILE"
+          
+          GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+          if [ -n "$GRADLEW_PATH" ]; then
+            GRADLEW_DIR=$(dirname "$GRADLEW_PATH")
+            if [ "$GRADLEW_DIR" != "." ]; then
+              echo "Moving files from $GRADLEW_DIR to root..."
+              shopt -s dotglob
+              mv "$GRADLEW_DIR"/* . || true
+            fi
           fi
         fi
 
@@ -29,7 +36,6 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
